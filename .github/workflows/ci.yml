@@ -1,0 +1,35 @@
+name: ci
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo test --locked
+
+  release-binary:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Debian 12 so the binary matches the glibc on the server.
+    container: rust:1-slim-bookworm
+    steps:
+      - uses: actions/checkout@v4
+      - run: apt-get update -qq && apt-get install -y -qq pkg-config
+      - run: cargo build --release --locked
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mail_sloth-linux-x86_64
+          path: target/release/mail_sloth
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: target/release/mail_sloth

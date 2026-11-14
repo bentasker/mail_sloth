@@ -1,0 +1,45 @@
+[package]
+name = "mail_sloth"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "A small self-hosted mail server with a REST API: sends DKIM-signed mail straight to MX, receives, forwards, and reports back over webhooks."
+repository = "https://github.com/pauldix/mail_sloth"
+
+[dependencies]
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "json", "query"] }
+axum-server = { version = "0.8", default-features = false, features = ["tls-rustls-no-provider"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "time", "sync", "fs", "io-util", "net"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+rustls-pki-types = "1"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+rustls-acme = { version = "0.15", default-features = false, features = ["ring", "tls12", "webpki-roots", "tokio", "axum"] }
+futures-util = "0.3"
+turso = "0.7"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+time = { version = "0.3", features = ["formatting", "parsing", "macros"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+clap = { version = "4", features = ["derive", "env"] }
+anyhow = "1"
+mail-builder = "0.5"
+mail-send = { version = "0.6", default-features = false, features = ["ring", "tls12"] }
+mail-auth = { version = "0.12", default-features = false, features = ["ring", "arc", "generate"] }
+mail-parser = "0.11"
+smtp-proto = "0.2"
+hickory-resolver = "0.26"
+hmac = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+subtle = "2"
+rand = "0.9"
+libc = "0.2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

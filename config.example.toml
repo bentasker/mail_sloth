@@ -1,0 +1,76 @@
+# mail_sloth configuration. Lives at /etc/mail_sloth/config.toml on the server.
+# Everything that is a decision lives here; the database only holds mail.
+
+# The mail host's own name. It is the HELO name, the MX target for every
+# domain, the PTR of the public IP, and the hostname of the API.
+hostname = "mail.example.com"
+# Public IPv4 of the host. Only used to print and check DNS records.
+public_ip = "203.0.113.10"
+# Let's Encrypt account contact; expiry warnings go here.
+acme_contact = "you@example.com"
+
+# Where the database, DKIM keys and certificates live.
+data_dir = "/var/lib/mail_sloth"
+http_listen = "0.0.0.0:443"
+smtp_listen = "0.0.0.0:25"
+# Authenticated submission over implicit TLS, for Gmail's "Send mail as".
+# Leave it out to have no submission port. Needs `tls` (the default).
+submission_listen = "0.0.0.0:465"
+
+# `mail_sloth secret` prints one. Required for forwarding (SRS).
+srs_secret = "CHANGE-ME-mail_sloth-secret-prints-one"
+
+# Messages per second to the outside world. One is deliberately gentle for a
+# new IP; raise it later if you like.
+send_rate_per_second = 1
+
+# Inbound connections from addresses on these lists are refused.
+dnsbl = ["zen.spamhaus.org"]
+
+# ---- sites: the applications that call the API -------------------------------
+
+[[site]]
+name = "party"
+# sha256 hex of each valid API key; `mail_sloth key` prints a key and its hash.
+api_keys = ["0000000000000000000000000000000000000000000000000000000000000000"]
+# Delivery events and inbound mail are POSTed here, signed with the secret.
+webhook_url = "https://party.example.com/api/mail/events"
+webhook_secret = "CHANGE-ME-mail_sloth-secret-prints-one"
+domains = ["party.example.com"]
+
+[[site]]
+name = "blog"
+api_keys = []
+domains = ["blog.example.com"]
+
+# ---- domains -------------------------------------------------------------------
+
+[[domain]]
+name = "party.example.com"
+# Every message accepted for this domain is also POSTed to the site's webhook
+# as `mail.received`. With this on, mail to any local part is accepted.
+inbound_webhook = true
+
+# Display name and default Reply-To for each address that sends. A
+# `password` (`mail_sloth password` prints one with its hash) lets that
+# address log in on the submission port and send as itself from Gmail.
+[domain.senders]
+paul = { name = "Paul", reply_to = "paul@inbox.example", password = "sha256:0000000000000000000000000000000000000000000000000000000000000000" }
+sam = { name = "Sam", reply_to = "sam@inbox.example" }
+
+# Where inbound mail goes: the real inboxes (a Gmail address, say) behind
+# each address at the domain. "*" is a catch-all. Addresses with no rule and no
+# catch-all are refused at RCPT unless inbound_webhook is on. An empty list
+# keeps the mail here unforwarded; point the domain's DMARC rua at it.
+[domain.forward]
+paul = ["paul@inbox.example"]
+dmarc = []
+sam = ["sam@inbox.example"]
+"*" = ["paul@inbox.example"]
+
+[[domain]]
+name = "blog.example.com"
+[domain.senders]
+paul = { name = "Paul", reply_to = "paul@inbox.example" }
+[domain.forward]
+"*" = ["paul@inbox.example"]
