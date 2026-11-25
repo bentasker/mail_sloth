@@ -160,7 +160,7 @@ pub async fn deliver(app: &App, m: &MessageRow) -> Outcome {
     try_hosts(app, hosts, m, &raw).await
 }
 
-/// Returrn list of MXs to try, in the order the resolver returned them
+/// Return list of MXs to try, in the order the resolver returned them
 /// number is capped: see [`MAX_MX_HOSTS`].
 pub(crate) fn mx_hosts<S: AsRef<str>>(exchanges: impl Iterator<Item = S>, domain: &str) -> Result<Vec<(String, u16)>, HostError> {
     let mut hosts = Vec::new();
